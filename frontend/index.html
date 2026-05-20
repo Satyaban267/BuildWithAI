@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Dev Card Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --accent-color: #238636;
+            --accent-hover: #2ea043;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --border-color: #30363d;
+            --error-color: #f85149;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #7ee787, #aff5b4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subheading {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1rem;
+            padding: 10px 15px;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            max-width: 350px;
+            margin: 2rem auto;
+            text-align: left;
+        }
+
+        .skeleton-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--border-color);
+            margin-bottom: 16px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-line {
+            height: 12px;
+            background: var(--border-color);
+            margin-bottom: 12px;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-line.short { width: 60%; }
+        .skeleton-line.medium { width: 80%; }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Result Area */
+        #resultContainer {
+            margin-top: 2rem;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+
+        #resultContainer.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .card-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #1c2128;
+            border-color: #8b949e;
+        }
+
+        #errorMessage {
+            color: var(--error-color);
+            background: rgba(248, 81, 73, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--error-color);
+            display: none;
+            margin-top: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .input-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub Dev Card</h1>
+        <p class="subheading">Enter any public GitHub username to generate your persona.</p>
+
+        <div class="input-group">
+            <input type="text" id="usernameInput" placeholder="e.g. torvalds" spellcheck="false">
+            <button id="generateBtn">Generate Card</button>
+        </div>
+
+        <div id="errorMessage"></div>
+
+        <!-- Skeleton Loader -->
+        <div id="skeleton" class="skeleton">
+            <div class="skeleton-circle"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line medium" style="margin-top: 20px;"></div>
+            <div class="skeleton-line"></div>
+        </div>
+
+        <!-- Result -->
+        <div id="resultContainer">
+            <div class="card-wrapper" id="cardWrapper">
+                <!-- Injected HTML card -->
+            </div>
+            <div class="actions">
+                <button id="shareBtn" class="btn-secondary">🔗 Copy Share Link</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('usernameInput');
+        const btn = document.getElementById('generateBtn');
+        const skeleton = document.getElementById('skeleton');
+        const resultContainer = document.getElementById('resultContainer');
+        const cardWrapper = document.getElementById('cardWrapper');
+        const errorMsg = document.getElementById('errorMessage');
+        const shareBtn = document.getElementById('shareBtn');
+
+        let currentCardUrl = '';
+
+        async function generateCard() {
+            const username = input.value.trim();
+            if (!username) return;
+
+            // Reset UI
+            errorMsg.style.display = 'none';
+            resultContainer.classList.remove('show');
+            resultContainer.style.display = 'none';
+            skeleton.style.display = 'block';
+            btn.disabled = true;
+            btn.innerText = 'Generating...';
+
+            try {
+                // Use relative path for unified serving, fallback to localhost:8080 for split dev
+                const isLocalDev = window.location.port === '3000' || (window.location.hostname === 'localhost' && window.location.port !== '8080');
+                const apiBase = isLocalDev ? 'http://localhost:8080' : '';
+                
+                const response = await fetch(`${apiBase}/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+
+                if (!response.ok) {
+                    let errorDetail = 'Failed to generate card';
+                    try {
+                        const errorData = await response.json();
+                        errorDetail = errorData.detail || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorDetail = `HTTP Error ${response.status}: ${response.statusText}`;
+                    }
+                    throw new Error(errorDetail);
+                }
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Inject the card HTML
+                    // Note: We use an iframe or shadow DOM for true isolation if needed,
+                    // but here we'll just inject it into a div.
+                    cardWrapper.innerHTML = data.html;
+                    currentCardUrl = (isLocalDev ? 'http://localhost:8080' : window.location.origin) + data.url;
+                    
+                    // Show result with fade-in
+                    skeleton.style.display = 'none';
+                    resultContainer.style.display = 'block';
+                    setTimeout(() => resultContainer.classList.add('show'), 10);
+                } else {
+                    throw new Error(data.message || 'Generation failed');
+                }
+
+            } catch (err) {
+                skeleton.style.display = 'none';
+                errorMsg.innerText = `Error: ${err.message}`;
+                errorMsg.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Generate Card';
+            }
+        }
+
+        btn.onclick = generateCard;
+
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') generateCard();
+        };
+
+        shareBtn.onclick = () => {
+            navigator.clipboard.writeText(currentCardUrl);
+            const originalText = shareBtn.innerText;
+            shareBtn.innerText = '✅ Copied!';
+            setTimeout(() => shareBtn.innerText = originalText, 2000);
+        };
+    </script>
+</body>
+</html>

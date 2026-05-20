@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+fastmcp
+google-genai
+google-adk
+httpx
+python-dotenv
